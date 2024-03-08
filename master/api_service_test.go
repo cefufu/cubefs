@@ -29,7 +29,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cubefs/cubefs/blobstore/common/trace"
 	"github.com/cubefs/cubefs/master/mocktest"
 	"github.com/cubefs/cubefs/proto"
 	"github.com/cubefs/cubefs/util/compressor"
@@ -108,7 +107,7 @@ func rangeMockMetaServers(fun func(*mocktest.MockMetaServer) bool) (count int, p
 }
 
 func createDefaultMasterServerForTest() *Server {
-	_, ctx := trace.StartSpanFromContextWithTraceID(context.Background(), "", "api-service-test")
+	_, ctx := proto.SpanContextPrefix("api-service-test-")
 	cfgJSON := `{
 		"role": "master",
 		"ip": "127.0.0.1",
@@ -419,7 +418,7 @@ func processCompression(reqURL string, compress bool, t testing.TB) (reply *prot
 func TestDisk(t *testing.T) {
 	addr := mds5Addr
 	disk := "/cfs"
-	_, ctx := trace.StartSpanFromContextWithTraceID(context.Background(), "", "api-service-test-disk")
+	_, ctx := proto.SpanContextPrefix("api-service-test-disk-")
 	decommissionDisk(ctx, addr, disk, t)
 }
 
@@ -455,7 +454,7 @@ func decommissionDisk(ctx context.Context, addr, path string, t *testing.T) {
 }
 
 func TestMarkDeleteVol(t *testing.T) {
-	_, ctx := trace.StartSpanFromContextWithTraceID(context.Background(), "", "api-service-test-mark-delete-vol")
+	_, ctx := proto.SpanContextPrefix("api-service-test-mark-delete-vol-")
 	name := "delVol"
 	createVol(ctx, map[string]interface{}{nameKey: name}, t)
 
@@ -480,7 +479,7 @@ func TestSetVolCapacity(t *testing.T) {
 }
 
 func TestPreloadDp(t *testing.T) {
-	_, ctx := trace.StartSpanFromContextWithTraceID(context.Background(), "", "api-service-test-preload-dp")
+	_, ctx := proto.SpanContextPrefix("api-service-test-preload-dp-")
 	volName := "preloadVol"
 	req := map[string]interface{}{}
 	req[nameKey] = volName
@@ -493,7 +492,7 @@ func TestPreloadDp(t *testing.T) {
 }
 
 func TestUpdateVol(t *testing.T) {
-	_, ctx := trace.StartSpanFromContextWithTraceID(context.Background(), "", "api-service-test-update-vol")
+	_, ctx := proto.SpanContextPrefix("api-service-test-update-vol-")
 	volName := "updateVol"
 	req := map[string]interface{}{}
 	req[nameKey] = volName
@@ -644,7 +643,7 @@ func TestGetVolSimpleInfo(t *testing.T) {
 }
 
 func TestCreateVol(t *testing.T) {
-	_, ctx := trace.StartSpanFromContextWithTraceID(context.Background(), "", "api-service-test-create-vol")
+	_, ctx := proto.SpanContextPrefix("api-service-test-create-vol-")
 	name := "test_create_vol"
 	reqURL := fmt.Sprintf("%v%v?name=%v&replicas=3&type=extent&capacity=100&owner=cfstest&zoneName=%v", hostAddr, proto.AdminCreateVol, name, testZone2)
 	process(reqURL, t)
@@ -660,7 +659,7 @@ func TestCreateVol(t *testing.T) {
 }
 
 func TestCreateMetaPartition(t *testing.T) {
-	_, ctx := trace.StartSpanFromContextWithTraceID(context.Background(), "", "api-service-test-create-meta-partition")
+	_, ctx := proto.SpanContextPrefix("api-service-test-create-meta-partition-")
 	server.cluster.checkMetaNodeHeartbeat(ctx)
 	time.Sleep(5 * time.Second)
 	commonVol.checkMetaPartitions(ctx, server.cluster)
@@ -698,7 +697,7 @@ func TestLoadDataPartition(t *testing.T) {
 }
 
 func TestDataPartitionDecommission(t *testing.T) {
-	_, ctx := trace.StartSpanFromContextWithTraceID(context.Background(), "", "api-service-test-partition-decommision")
+	_, ctx := proto.SpanContextPrefix("api-service-test-partition-decommision-")
 	if len(commonVol.dataPartitions.partitions) == 0 {
 		t.Errorf("no data partitions")
 		return
@@ -833,7 +832,7 @@ func TestAddMetaReplica(t *testing.T) {
 		defer mockServerLock.Unlock()
 		mockMetaServers = append(mockMetaServers, addMetaServer(mms8Addr, testZone3))
 	}()
-	_, ctx := trace.StartSpanFromContextWithTraceID(context.Background(), "", "api-service-test-add-meta-replica")
+	_, ctx := proto.SpanContextPrefix("api-service-test-add-meta-replica-")
 	server.cluster.checkMetaNodeHeartbeat(ctx)
 	time.Sleep(2 * time.Second)
 	reqURL := fmt.Sprintf("%v%v?id=%v&addr=%v", hostAddr, proto.AdminAddMetaReplica, partition.PartitionID, mms8Addr)
@@ -1061,7 +1060,7 @@ func TestGetUser(t *testing.T) {
 }
 
 func TestUpdateUser(t *testing.T) {
-	_, ctx := trace.StartSpanFromContextWithTraceID(context.Background(), "", "api-service-test-update-user")
+	_, ctx := proto.SpanContextPrefix("api-service-test-update-user-")
 	reqURL := fmt.Sprintf("%v%v", hostAddr, proto.UserUpdate)
 	param := &proto.UserUpdateParam{UserID: testUserID, AccessKey: ak, SecretKey: sk, Type: proto.UserTypeAdmin, Description: description}
 	data, err := json.Marshal(param)
@@ -1099,7 +1098,7 @@ func TestGetAKInfo(t *testing.T) {
 }
 
 func TestUpdatePolicy(t *testing.T) {
-	_, ctx := trace.StartSpanFromContextWithTraceID(context.Background(), "", "api-service-test-update-policy")
+	_, ctx := proto.SpanContextPrefix("api-service-test-update-policy-")
 	reqURL := fmt.Sprintf("%v%v", hostAddr, proto.UserUpdatePolicy)
 	param := &proto.UserPermUpdateParam{UserID: testUserID, Volume: commonVolName, Policy: []string{proto.BuiltinPermissionWritable.String()}}
 	data, err := json.Marshal(param)
@@ -1120,7 +1119,7 @@ func TestUpdatePolicy(t *testing.T) {
 }
 
 func TestRemovePolicy(t *testing.T) {
-	_, ctx := trace.StartSpanFromContextWithTraceID(context.Background(), "", "api-service-test-remove-policy")
+	_, ctx := proto.SpanContextPrefix("api-service-test-remove-policy-")
 	reqURL := fmt.Sprintf("%v%v", hostAddr, proto.UserRemovePolicy)
 	param := &proto.UserPermRemoveParam{UserID: testUserID, Volume: commonVolName}
 	data, err := json.Marshal(param)
@@ -1141,7 +1140,7 @@ func TestRemovePolicy(t *testing.T) {
 }
 
 func TestTransferVol(t *testing.T) {
-	_, ctx := trace.StartSpanFromContextWithTraceID(context.Background(), "", "api-service-test-transfer-vol")
+	_, ctx := proto.SpanContextPrefix("api-service-test-transfer-vol-")
 	reqURL := fmt.Sprintf("%v%v", hostAddr, proto.UserTransferVol)
 	param := &proto.UserTransferVolParam{Volume: commonVolName, UserSrc: "cfs", UserDst: testUserID, Force: false}
 	data, err := json.Marshal(param)
@@ -1180,7 +1179,7 @@ func TestTransferVol(t *testing.T) {
 }
 
 func TestDeleteVolPolicy(t *testing.T) {
-	_, ctx := trace.StartSpanFromContextWithTraceID(context.Background(), "", "api-service-test-delete-vol-policy")
+	_, ctx := proto.SpanContextPrefix("api-service-test-delete-vol-policy-")
 	param := &proto.UserPermUpdateParam{UserID: "cfs", Volume: commonVolName, Policy: []string{proto.BuiltinPermissionWritable.String()}}
 	if _, err := server.user.updatePolicy(ctx, param); err != nil {
 		t.Error(err)
@@ -1214,7 +1213,7 @@ func TestListUser(t *testing.T) {
 }
 
 func TestDeleteUser(t *testing.T) {
-	_, ctx := trace.StartSpanFromContextWithTraceID(context.Background(), "", "api-service-test-delete-user")
+	_, ctx := proto.SpanContextPrefix("api-service-test-delete-user-")
 	reqURL := fmt.Sprintf("%v%v?user=%v", hostAddr, proto.UserDelete, testUserID)
 	process(reqURL, t)
 	if _, err := server.user.getUserInfo(ctx, testUserID); err != proto.ErrUserNotExists {
@@ -1396,7 +1395,7 @@ func checkVolForbidden(name string, forbidden bool) (success bool) {
 }
 
 func TestForbiddenVolume(t *testing.T) {
-	_, ctx := trace.StartSpanFromContextWithTraceID(context.Background(), "", "api-service-test-forbid-volume")
+	_, ctx := proto.SpanContextPrefix("api-service-test-forbid-volume-")
 	name := "forbiddenVol"
 	createVol(ctx, map[string]interface{}{nameKey: name}, t)
 	vol, err := server.cluster.getVol(name)
@@ -1475,7 +1474,7 @@ func checkVolAuditLog(name string, enable bool) (success bool) {
 }
 
 func TestVolumeEnableAuditLog(t *testing.T) {
-	_, ctx := trace.StartSpanFromContextWithTraceID(context.Background(), "", "api-service-test-volume-enable-auditlog")
+	_, ctx := proto.SpanContextPrefix("api-service-test-volume-enable-auditlog-")
 	name := "auditLogVol"
 	createVol(ctx, map[string]interface{}{nameKey: name}, t)
 	vol, err := server.cluster.getVol(name)
